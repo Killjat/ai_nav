@@ -1,0 +1,7 @@
+.env
+*.db
+checked.json
+urls.txt
+__pycache__/
+.next/
+node_modules/

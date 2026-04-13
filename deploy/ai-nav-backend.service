@@ -1,0 +1,13 @@
+[Unit]
+Description=AI Nav Backend
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/ai-nav
+Environment=PYTHONPATH=/opt/ai-nav
+ExecStart=/usr/bin/python3 -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

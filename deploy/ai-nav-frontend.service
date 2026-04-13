@@ -1,0 +1,13 @@
+[Unit]
+Description=AI Nav Frontend
+After=network.target ai-nav-backend.service
+
+[Service]
+WorkingDirectory=/opt/ai-nav/frontend
+Environment=NEXT_PUBLIC_API_URL=http://45.207.215.17/api
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
