@@ -1,0 +1,14 @@
+[Unit]
+Description=AI Nav Gateway
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/ai-nav
+Environment=PYTHONPATH=/opt/ai-nav
+EnvironmentFile=/opt/ai-nav/.env
+ExecStart=/usr/bin/python3 -m uvicorn gateway.main:app --host 127.0.0.1 --port 8001
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

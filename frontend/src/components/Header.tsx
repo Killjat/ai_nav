@@ -13,6 +13,14 @@ export default function Header({ stats }: { stats: any }) {
             收录 <span className="text-white font-medium mx-1">{stats.total}</span> 个站点
           </div>
         )}
+        <a href="/generate" style={{
+          fontSize: "13px", padding: "6px 16px", borderRadius: "999px",
+          background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+          color: "white", textDecoration: "none", fontWeight: 600,
+          boxShadow: "0 2px 12px rgba(124,58,237,0.4)"
+        }}>
+          ✨ 免费生图
+        </a>
       </div>
     </header>
   );

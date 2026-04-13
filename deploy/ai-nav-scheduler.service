@@ -1,0 +1,14 @@
+[Unit]
+Description=AI Nav Scheduler
+After=network.target ai-nav-backend.service
+
+[Service]
+WorkingDirectory=/opt/ai-nav/scheduler
+Environment=PYTHONPATH=/opt/ai-nav
+EnvironmentFile=/opt/ai-nav/.env
+ExecStart=/usr/bin/python3 main.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

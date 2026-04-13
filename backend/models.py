@@ -21,5 +21,13 @@ class Site(Base):
     is_free    = Column(Boolean, default=True)   # 是否免费
     tags       = Column(JSON, default=list)      # 额外标签
 
+    # API 探测结果
+    has_api      = Column(Boolean, default=False)
+    api_paths    = Column(JSON, default=list)
+    swagger_url  = Column(String, default="")
+
+    # 深度检测置信度
+    confidence   = Column(String, default="low")  # low / medium / high
+
     last_checked = Column(DateTime, default=datetime.utcnow)
     created_at   = Column(DateTime, default=datetime.utcnow)

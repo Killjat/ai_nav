@@ -29,6 +29,12 @@ def site_to_dict(s: Site) -> dict:
             "image_edit": s.image_edit,
             "video_gen": s.video_gen,
         },
+        "api": {
+            "has_api": s.has_api,
+            "api_paths": s.api_paths or [],
+            "swagger_url": s.swagger_url or "",
+        },
+        "confidence": s.confidence or "low",
         "is_active": s.is_active,
         "is_free": s.is_free,
         "tags": s.tags or [],
@@ -39,6 +45,8 @@ def site_to_dict(s: Site) -> dict:
 @app.get("/api/sites")
 def list_sites(
     feature: Optional[str] = Query(None, description="text_to_image | image_edit | video_gen"),
+    has_api: Optional[bool] = Query(None, description="只看有开放 API 的站点"),
+    confidence: Optional[str] = Query(None, description="high | medium | low"),
     free_only: bool = False,
     db: Session = Depends(get_db),
 ):
@@ -49,6 +57,10 @@ def list_sites(
         q = q.filter(Site.image_edit == True)
     elif feature == "video_gen":
         q = q.filter(Site.video_gen == True)
+    if has_api is True:
+        q = q.filter(Site.has_api == True)
+    if confidence:
+        q = q.filter(Site.confidence == confidence)
     if free_only:
         q = q.filter(Site.is_free == True)
     return [site_to_dict(s) for s in q.all()]
