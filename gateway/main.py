@@ -49,6 +49,7 @@ class GenerateRequest(BaseModel):
     negative_prompt: str = ""
     width: int = 512
     height: int = 512
+    mode: str = "image"   # image | jimeng_video | veo_video | wan_video | tts
 
 
 class GenerateResponse(BaseModel):
@@ -59,9 +60,42 @@ class GenerateResponse(BaseModel):
 
 
 # ── 后台生图任务 ──────────────────────────────────────────
-async def run_generate(task_id: str, prompt: str):
+async def run_generate(task_id: str, prompt: str, mode: str = "image"):
     tasks[task_id]["status"] = "processing"
 
+    # 视频/语音走 site_client 直接调接口
+    if mode in ("jimeng_video", "veo_video", "wan_video", "tts"):
+        try:
+            import sys, os
+            sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+            from crawler.site_client import SiteClient
+            async with SiteClient() as client:
+                if mode == "jimeng_video":
+                    result = await client.jimeng_video(prompt)
+                elif mode == "veo_video":
+                    result = await client.veo_video(prompt)
+                elif mode == "wan_video":
+                    result = await client.wan_video(prompt)
+                elif mode == "tts":
+                    result = await client.text_to_speech(prompt)
+
+            if result.get("error"):
+                tasks[task_id]["status"] = "failed"
+                tasks[task_id]["error"] = result["error"]
+            else:
+                # 找结果 URL
+                url = (result.get("video_url") or result.get("audio_url") or
+                       result.get("url") or str(result))
+                if not url.startswith("http"):
+                    url = f"https://115.190.169.243/{url}"
+                tasks[task_id]["status"] = "done"
+                tasks[task_id]["image_url"] = url
+        except Exception as e:
+            tasks[task_id]["status"] = "failed"
+            tasks[task_id]["error"] = str(e)
+        return
+
+    # 图片走 Playwright 站点池
     site = await pool.acquire()
     if not site:
         tasks[task_id]["status"] = "failed"
@@ -71,7 +105,6 @@ async def run_generate(task_id: str, prompt: str):
     try:
         result = await driver.generate(site.url, prompt)
         await pool.release(site, result["success"])
-
         if result["success"]:
             tasks[task_id]["status"] = "done"
             tasks[task_id]["image_url"] = result["image_url"]
@@ -89,7 +122,7 @@ async def run_generate(task_id: str, prompt: str):
 async def generate(req: GenerateRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid.uuid4())[:8]
     tasks[task_id] = {"status": "pending", "image_url": "", "error": ""}
-    background_tasks.add_task(run_generate, task_id, req.prompt)
+    background_tasks.add_task(run_generate, task_id, req.prompt, req.mode)
     return GenerateResponse(task_id=task_id, status="pending")
 
 

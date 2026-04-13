@@ -86,10 +86,23 @@ def save_account(record: dict):
 
 
 def get_account(url: str) -> dict | None:
+    """获取该站点下一个可用账号（跳过积分耗尽的）"""
     for a in load_accounts():
-        if a["url"] == url and a.get("success"):
+        if a["url"] == url and a.get("success") and not a.get("exhausted"):
             return a
     return None
+
+
+def mark_exhausted(url: str, username: str):
+    """标记账号积分耗尽"""
+    accounts = load_accounts()
+    for a in accounts:
+        if a["url"] == url and a.get("username") == username:
+            a["exhausted"] = True
+            break
+    with open(ACCOUNTS_FILE, "w") as f:
+        json.dump(accounts, f, ensure_ascii=False, indent=2)
+    print(f"  账号 {username} 已标记为积分耗尽")
 
 
 def load_cookies(url: str) -> list[dict]:

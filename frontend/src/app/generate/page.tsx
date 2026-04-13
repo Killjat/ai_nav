@@ -11,6 +11,7 @@ export default function GeneratePage() {
   const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState("");
   const [elapsed, setElapsed] = useState(0);
+  const [mode, setMode] = useState("image");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startTimer = () => {
@@ -56,7 +57,7 @@ export default function GeneratePage() {
       const res = await fetch(`${GATEWAY}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, mode }),
       });
       const data = await res.json();
       setStatus("processing");
@@ -104,6 +105,28 @@ export default function GeneratePage() {
             </span>
           </h1>
           <p style={{ color: "#4b5563", fontSize: "15px" }}>免费调用，无需注册，生成约需 30-40 秒</p>
+        </div>
+
+        {/* 模式选择 */}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px", justifyContent: "center" }}>
+          {[
+            { value: "image",        label: "🖼 文生图",   color: "#7c3aed" },
+            { value: "jimeng_video", label: "🎬 即梦视频", color: "#db2777" },
+            { value: "veo_video",    label: "🎥 Veo视频",  color: "#0891b2" },
+            { value: "wan_video",    label: "📹 Wan视频",  color: "#059669" },
+            { value: "tts",          label: "🔊 文本转语音", color: "#d97706" },
+          ].map(m => (
+            <button key={m.value} onClick={() => setMode(m.value)}
+              style={{
+                padding: "8px 18px", borderRadius: "999px", fontSize: "13px", fontWeight: 600,
+                cursor: "pointer", border: "none", transition: "all 0.2s",
+                background: mode === m.value ? m.color : "rgba(255,255,255,0.06)",
+                color: mode === m.value ? "white" : "#6b7280",
+                boxShadow: mode === m.value ? `0 4px 16px ${m.color}55` : "none",
+              }}>
+              {m.label}
+            </button>
+          ))}
         </div>
 
         {/* 输入区 */}
@@ -183,11 +206,14 @@ export default function GeneratePage() {
             {status === "done" && imageUrl && (
               <div>
                 <p style={{ color: "#34d399", fontWeight: 600, marginBottom: "16px" }}>✅ 生成成功</p>
-                <img
-                  src={imageUrl}
-                  alt={prompt}
-                  style={{ maxWidth: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }}
-                />
+                {mode === "tts" ? (
+                  <audio controls src={imageUrl} style={{ width: "100%", marginBottom: "16px" }} />
+                ) : mode.includes("video") ? (
+                  <video controls src={imageUrl} style={{ maxWidth: "100%", borderRadius: "12px", marginBottom: "16px" }} />
+                ) : (
+                  <img src={imageUrl} alt={prompt}
+                    style={{ maxWidth: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }} />
+                )}
                 <div style={{ marginTop: "16px", display: "flex", gap: "12px", justifyContent: "center" }}>
                   <a href={imageUrl} download target="_blank" rel="noopener noreferrer"
                     style={{ padding: "10px 24px", borderRadius: "10px", background: "rgba(52,211,153,0.15)", color: "#34d399", border: "1px solid rgba(52,211,153,0.3)", textDecoration: "none", fontSize: "14px" }}>
